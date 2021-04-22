@@ -13,7 +13,7 @@ import shapely.wkt
 st.set_page_config(layout="wide", page_title="Ex-stream-ly Cool App",
                   page_icon="🧊", initial_sidebar_state="expanded",)
 
-# @st.cache(persist=True, allow_output_mutation=True)
+@st.cache(persist=True, allow_output_mutation=True)
 def load_gdf():
     def parse_geometry(x):
         return shapely.wkt.loads(x["geometry"])
@@ -54,7 +54,7 @@ with row1_1:
 def get_prefix_by_time(time_radio):
     if time_radio == "January":
         return 'Jan.'
-    elif time_radio == "Februray":
+    elif time_radio == "Feburary":
         return 'Feb.'
     elif time_radio == "March":
         return 'Mar.'
@@ -69,6 +69,7 @@ def get_suffix_by_type(type_radio):
     if type_radio == "Excessive Dalay":
         return "_ed"
 
+@st.cache(persist=True, allow_output_mutation=True)
 def filt_df(df, region_radio):
     if region_radio == 'Tennessee':
         return df.copy()
@@ -84,6 +85,8 @@ def filt_df(df, region_radio):
     df = df[filt].copy()
     return df
 
+
+@st.cache(persist=True, allow_output_mutation=True)
 def find_best_view(df, region_radio):
     mid_lats, mid_longs = df.MidLat, df.MidLong
     m_lat = statistics.median(mid_lats)
@@ -94,15 +97,16 @@ def find_best_view(df, region_radio):
     return (m_lat, m_long, zoom)
 
 
+@st.cache(persist=True, allow_output_mutation=True)
 def get_map(df, lat, lon, zoom, region_radio, time_radio, type_radio):
     prefix_n = get_prefix_by_time(time_radio)
     suffix_n = get_suffix_by_type(type_radio)
     col_name = prefix_n + suffix_n
     def get_color(x, col_name, xmin, xmax):
         import matplotlib
-        import matplotlib.cm as cm
+        # import matplotlib.cm as cm
         norm = matplotlib.colors.Normalize(vmin=xmin, vmax=xmax, clip=True)
-        mapper = cm.ScalarMappable(norm=norm, cmap=cm.plasma)
+        mapper = matplotlib.cm.ScalarMappable(norm=norm, cmap=matplotlib.cm.plasma)
         if np.isnan(x[col_name]):
             return (100.0,100.0,100.0)
         txt = list(mapper.to_rgba(x[col_name])[:-1])
@@ -110,7 +114,9 @@ def get_map(df, lat, lon, zoom, region_radio, time_radio, type_radio):
         return txt
     # update color by the specified lottr
     df['color_lottr'] = df.apply(get_color, axis=1, args=(col_name, 1, 1.5))
-    
+    if type_radio == "Excessive Dalay":
+        df['color_lottr'] = df.apply(get_color, axis=1, args=(col_name, 0, 1000))
+
     path_layer = pdk.Layer(
         type="PathLayer",
         data=df,
