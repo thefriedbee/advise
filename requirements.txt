@@ -1,5 +1,4 @@
 affine==2.3.0
-altair @ file:///tmp/build/80754af9/altair_1599835197802/work
 appnope @ file:///opt/concourse/worker/volumes/live/5f13e5b3-5355-4541-5fc3-f08850c73cf9/volume/appnope_1606859448618/work
 argon2-cffi @ file:///opt/concourse/worker/volumes/live/d733ceb5-7f19-407b-7da7-a386540ab855/volume/argon2-cffi_1613037492998/work
 astor==0.8.1
