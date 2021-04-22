@@ -31,7 +31,7 @@ def load_gdf():
 
 st.title("Exploring Advisè Corridor Reliability")
 
-row1_1, row1_2 = st.beta_columns((2,10))
+row1_1, row1_2, row1_3 = st.beta_columns((2,9,1))
 
 with row1_1:
     with st.beta_container():
@@ -96,12 +96,25 @@ def find_best_view(df, region_radio):
         zoom = 6
     return (m_lat, m_long, zoom)
 
+def plot_color_gradients(cmap, vmin, vmax):
+    import matplotlib
+    import matplotlib.cm as cm
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(0.8, 2))
+    norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
+    mapper = cm.ScalarMappable(norm=norm, cmap=cm.plasma)
+    cb = plt.colorbar(mappable=mapper, ax=ax, orientation='vertical')
+    ax.remove()
+    return fig
 
 @st.cache(persist=True, allow_output_mutation=True)
 def get_map(df, lat, lon, zoom, region_radio, time_radio, type_radio):
     prefix_n = get_prefix_by_time(time_radio)
     suffix_n = get_suffix_by_type(type_radio)
     col_name = prefix_n + suffix_n
+    # prepare data
+    df['elevation'] = df[col_name].replace(np.nan, 0)
+    df['elevation'] = df['elevation'].apply(lambda x:round(x,2))
     def get_color(x, col_name, xmin, xmax):
         import matplotlib
         # import matplotlib.cm as cm
@@ -114,8 +127,10 @@ def get_map(df, lat, lon, zoom, region_radio, time_radio, type_radio):
         return txt
     # update color by the specified lottr
     df['color_lottr'] = df.apply(get_color, axis=1, args=(col_name, 1, 1.5))
+    vmin, vmax = 1, 1.5
     if type_radio == "Excessive Dalay":
         df['color_lottr'] = df.apply(get_color, axis=1, args=(col_name, 0, 1000))
+        vmin, vmax = 0, 1000
 
     path_layer = pdk.Layer(
         type="PathLayer",
@@ -144,16 +159,19 @@ def get_map(df, lat, lon, zoom, region_radio, time_radio, type_radio):
                'style': {'color': 'white'}
               }
     return pdk.Deck(layers=[path_layer], initial_view_state=view_state,
-                     map_style=pdk.map_styles.ROAD, tooltip = tooltip)
+                     map_style=pdk.map_styles.ROAD, tooltip = tooltip), vmin, vmax
 
 gdf = load_gdf()
 gdf = filt_df(gdf, region_radio)
 view_p = find_best_view(gdf, region_radio)
-my_map = get_map(gdf, view_p[0], view_p[1], view_p[2],
-                 region_radio, time_radio, type_radio)
+my_map, vmin, vmax = get_map(gdf, view_p[0], view_p[1], view_p[2],
+    region_radio, time_radio, type_radio)
 
 with row1_2:
     st.write(my_map)
+with row1_3:
+    st.pyplot(plot_color_gradients('plasma', vmin, vmax))
+
 
 
 
