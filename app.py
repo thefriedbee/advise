@@ -14,7 +14,7 @@ import altair as alt
 st.set_page_config(layout="wide", page_title="ADVISE Interactive Dashboard",
                   page_icon="🧊", initial_sidebar_state="expanded",)
 
-# @st.cache(persist=True, allow_output_mutation=True)
+@st.cache(persist=True, allow_output_mutation=True)
 def load_gdf():
     def parse_geometry(x):
         return shapely.wkt.loads(x["geometry"])
@@ -72,7 +72,7 @@ def get_suffix_by_type(type_radio):
     if type_radio == "Excessive Dalay":
         return "_ed"
 
-# @st.cache(persist=True, allow_output_mutation=True)
+@st.cache(persist=True, allow_output_mutation=True)
 def filt_df(df, region_radio):
     if region_radio == 'Tennessee':
         return df.copy()
@@ -89,7 +89,7 @@ def filt_df(df, region_radio):
     return df
 
 
-# @st.cache(persist=True, allow_output_mutation=True)
+@st.cache(persist=True, allow_output_mutation=True)
 def find_best_view(df, region_radio):
     mid_lats, mid_longs = df.MidLat, df.MidLong
     m_lat = statistics.median(mid_lats)
@@ -110,7 +110,7 @@ def plot_color_gradients(cmap, vmin, vmax):
     ax.remove()
     return fig
 
-# @st.cache(persist=True, allow_output_mutation=True)
+@st.cache(persist=True, allow_output_mutation=True)
 def get_map(df, lat, lon, zoom, region_radio, time_radio, type_radio):
     prefix_n = get_prefix_by_time(time_radio)
     suffix_n = get_suffix_by_type(type_radio)
@@ -175,7 +175,7 @@ with row1_2:
 with row1_3:
     st.pyplot(plot_color_gradients('plasma', vmin, vmax))
 
-
+@st.cache(persist=True, allow_output_mutation=True)
 def altris_compare_by_tot_miles_test(df, x_col, y_col, facet_col='city_name', use_log=True):
     df = df[[x_col, y_col, facet_col]]
     x_str = "{}:Q".format(x_col)
